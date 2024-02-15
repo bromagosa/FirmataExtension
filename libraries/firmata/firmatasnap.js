@@ -25,31 +25,38 @@ FirmataController.prototype.init = function (stage) {
     this.digitalReadings = [];
 };
 
-FirmataController.prototype.connect = function () {
-    navigator.serial.requestPort().then(port => {
-        if (this.board) {
-            this.disconnect(true); // quietly
-        }
-        var dialog = 
+FirmataController.prototype.selectPort = function () {
+    if (this.board) {
+        var myself = this;
+        this.transport.on('close', function () { myself.selectPort(); });
+        this.disconnect(
+            true // quietly
+        );
+    } else {
+        navigator.serial.requestPort().then(port => this.connect(port));
+    }
+};
+
+FirmataController.prototype.connect = function (port) {
+    var dialog =
+        new DialogBoxMorph().inform(
+            'Connection',
+            'Trying to connect...',
+            this.stage.world()
+        );
+    this.port = port;
+    port.open({ baudRate: 57600 }).then(() => {
+        this.analogReadings = [];
+        this.digitalReadings = [];
+        this.transport = new WebSerialTransport(port);
+        this.board = new Firmata(this.transport);
+        this.board.on('ready', () => {
+            if (dialog) { dialog.destroy(); }
             new DialogBoxMorph().inform(
                 'Connection',
-                'Trying to connect...',
+                'Connection successful.\nHappy prototyping!',
                 this.stage.world()
             );
-        this.port = port;
-        port.open({ baudRate: 57600 }).then(() => {
-            this.analogReadings = [];
-            this.digitalReadings = [];
-            this.transport = new WebSerialTransport(port);
-            this.board = new Firmata(this.transport);
-            this.board.on('ready', () => {
-                if (dialog) { dialog.destroy(); }
-                new DialogBoxMorph().inform(
-                    'Connection',
-                    'Connection successful.\nHappy prototyping!',
-                    this.stage.world()
-                );
-            });
         });
     });
 };
@@ -189,7 +196,7 @@ SnapExtensions.buttons.palette.push({
         if (!stage.firmataController) {
             stage.firmataController = new FirmataController(stage);
         }
-        stage.firmataController.connect();
+        stage.firmataController.selectPort();
     }
 });
 
