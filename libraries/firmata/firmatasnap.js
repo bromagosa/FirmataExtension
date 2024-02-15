@@ -38,13 +38,16 @@ FirmataController.prototype.selectPort = function () {
 };
 
 FirmataController.prototype.connect = function (port) {
-    var dialog =
-        new DialogBoxMorph().inform(
-            'Connection',
-            'Trying to connect...',
-            this.stage.world()
-        );
+    var myself = this,
+        dialog =
+            new DialogBoxMorph().inform(
+                'Connection',
+                'Trying to connect...',
+                this.stage.world()
+            );
+
     this.port = port;
+
     port.open({ baudRate: 57600 }).then(() => {
         this.analogReadings = [];
         this.digitalReadings = [];
@@ -57,7 +60,11 @@ FirmataController.prototype.connect = function (port) {
                 'Connection successful.\nHappy prototyping!',
                 this.stage.world()
             );
+            this.transport.port.ondisconnect = function () {
+                myself.disconnected();
+            };
         });
+
     });
 };
 
@@ -79,6 +86,16 @@ FirmataController.prototype.disconnect = function (quietly) {
             this.stage.world()
         );
     }
+};
+
+FirmataController.prototype.disconnected = function () {
+    // Board was disconnected because of some error, or cable was unplugged
+    this.disconnect(quietly);
+    new DialogBoxMorph().inform(
+        'Connection',
+        'Board was disconnected',
+        this.stage.world()
+    );
 };
 
 FirmataController.prototype.digitalWrite = function (pin, value) {
