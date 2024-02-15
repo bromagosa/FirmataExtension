@@ -46,6 +46,16 @@ FirmataController.prototype.connect = function (port) {
                 this.stage.world()
             );
 
+    setTimeout(
+        function () {
+            if (!(myself.board && myself.board.isReady)) {
+                dialog.destroy();
+                myself.disconnected('Timed out while attempting to connect.');
+            }
+        },
+        6000
+    );
+
     this.port = port;
 
     port.open({ baudRate: 57600 }).then(() => {
@@ -88,12 +98,12 @@ FirmataController.prototype.disconnect = function (quietly) {
     }
 };
 
-FirmataController.prototype.disconnected = function () {
+FirmataController.prototype.disconnected = function (message) {
     // Board was disconnected because of some error, or cable was unplugged
-    this.disconnect(quietly);
+    this.disconnect(true);
     new DialogBoxMorph().inform(
         'Connection',
-        'Board was disconnected',
+        message || 'Board was disconnected',
         this.stage.world()
     );
 };
