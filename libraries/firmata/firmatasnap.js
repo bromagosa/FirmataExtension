@@ -1,3 +1,13 @@
+// Firmata Extension
+// =================
+// Interface with Arduinos or any other device via webserial through the Firmata
+// protocol. It tries to stay as faithful as possible to Snap4Arduino.
+// -----------------
+// 🄯 Bernat Romagosa i Carrasquer, February 2024
+//
+// The Firmata implementation used here was adapted for the web by Jelle Hak and
+// was fetched from https://www.npmjs.com/package/firmata-web
+
 import { Firmata, WebSerialTransport } from "./index.js";
 
 // FirmataController //////////////////////////////////////////////////////
@@ -85,13 +95,31 @@ FirmataController.prototype.analogWrite = function (pin, value) {
 };
 
 FirmataController.prototype.servoWrite = function (pin, value) {
-    // TODO parse the value and set up servo defaults
-    var board = this.board;
+    var board = this.board,
+        numericValue = parseInt(value);
+
     if (board && board.isReady) {
+        if (value == 'disconnected') {
+            board.pinMode(pin, board.MODES.OUTPUT);
+            return;
+        }
         if (board.pins[pin].mode != board.MODES.SERVO) {
             board.pinMode(pin, board.MODES.SERVO);
+            board.servoConfig(pin, 600, 2400);
         }
-        this.board.servoWrite(pin, value);
+
+        switch (value) {
+            case 'clockwise':
+                numericValue = 1200;
+                break;
+            case 'counter-clockwise':
+                numericValue = 1800;
+                break;
+            case 'stopped':
+                numericValue = 1500;
+                break;
+        }
+        board.servoWrite(pin, numericValue);
     }
 };
 
