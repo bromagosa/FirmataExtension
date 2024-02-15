@@ -88,6 +88,8 @@ FirmataController.prototype.digitalWrite = function (pin, value) {
             board.pinMode(pin, board.MODES.OUTPUT);
         }
         board.digitalWrite(pin, value ? 1 : 0);
+    } else {
+        throw new Error('Board not connected');
     }
 };
 
@@ -98,6 +100,8 @@ FirmataController.prototype.analogWrite = function (pin, value) {
             board.pinMode(pin, board.MODES.PWM);
         }
         board.analogWrite(pin, value);
+    } else {
+        throw new Error('Board not connected');
     }
 };
 
@@ -127,6 +131,8 @@ FirmataController.prototype.servoWrite = function (pin, value) {
                 break;
         }
         board.servoWrite(pin, numericValue);
+    } else {
+        throw new Error('Board not connected');
     }
 };
 
@@ -143,8 +149,10 @@ FirmataController.prototype.analogRead = function (pin, value) {
                 v => { this.analogReadings[pin] = v }
             );
         }
+        return this.analogReadings[pin];
+    } else {
+        throw new Error('Board not connected');
     }
-    return this.analogReadings[pin];
 };
 
 FirmataController.prototype.digitalRead = function (pin, value) {
@@ -160,8 +168,10 @@ FirmataController.prototype.digitalRead = function (pin, value) {
                 v => { this.digitalReadings[pin] = v == 1 }
             );
         }
+        return this.digitalReadings[pin];
+    } else {
+        throw new Error('Board not connected');
     }
-    return this.digitalReadings[pin];
 };
 
 FirmataController.prototype.pinsThatSupport = function (mode) {
@@ -188,7 +198,7 @@ FirmataController.prototype.formatMenu = function (array) {
 // Buttons
 
 SnapExtensions.buttons.palette.push({
-    category: 'Firmata',
+    category: 'Arduino (Firmata)',
     label: 'Connect',
     hideable: false,
     action: function () {
@@ -201,7 +211,7 @@ SnapExtensions.buttons.palette.push({
 });
 
 SnapExtensions.buttons.palette.push({
-    category: 'Firmata',
+    category: 'Arduino (Firmata)',
     label: 'Disconnect',
     hideable: false,
     action: function () {
